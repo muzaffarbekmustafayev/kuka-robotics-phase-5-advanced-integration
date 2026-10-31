@@ -1,5 +1,5 @@
-# KUKA RSI (Robot Sensor Interface) Real-Time Architecture
-## KUKA RSI (Robot Sensor Interface) real-time interfeysi | Интерфейс реального времени KUKA RSI (Robot Sensor Interface)
+# 20-Dars: KUKA RSI (RobotSensorInterface) va Real-Vaqt UDP integratsiyasi
+## KUKA RSI (RobotSensorInterface) Real-Time XML/UDP Socket Integration
 
 [![Phase](https://img.shields.io/badge/Phase-kuka-robotics-phase-5-advanced-integration-blue.svg)](#)
 [![Robot: KUKA KR 6 R900-2](https://img.shields.io/badge/KUKA-KR%206%20R900--2%20(AGILUS)-orange.svg)](https://www.kuka.com)
@@ -7,41 +7,58 @@
 
 ---
 
-### 🌐 Overview & Multilingual Summary
-
-#### 🇺🇿 O'zbekcha:
-KUKA RSI arxitekturasi: tashqi kompyuterdan real vaqtda (<12ms siklda) XML paketlar protokoli orqali to'g'ridan-to'g'ri boshqaruv.
-
-#### 🇷🇺 Русский:
-Архитектура KUKA RSI: прямое управление с внешнего ПК в реальном времени (<12 мс) по протоколу XML-пакетов через Ethernet.
-
-#### 🇬🇧 English:
-KUKA RSI architecture: direct external real-time control (<12ms deterministic cycle) using XML Ethernet packets.
+### 🎯 1. Maqsad (Goal)
+KUKA RobotSensorInterface (RSI) texnologiyasi asosida tashqi server va KUKA KR C4/C5 boshqaruvchisi o'rtasida $4\text{ ms} / 12\text{ ms}$ real-vaqt rejimida deterministik UDP/IP soket aloqasini o'rnatish, IPOC (Interpolation Cycle Counter) uzluksizligini tahlil qilish hamda real-vaqtda XML formatidagi fazoviy korreksiya signallarini (`RKorr`) generatsiya qilish.
 
 ---
 
-### 🗂️ Directory Structure (Mandatory Boilerplate)
-```
-20-kuka-rsi-interface/
-├── src/
-│   ├── krl/            # Production KRL code (.src, .dat) [All code & comments in English]
-│   └── scripts/        # Python verification scripts (.py) [All code & comments in English]
-├── sim/                # KUKA.Sim Pro layouts (.vcmx), URDF and CAD models
-├── docs/               # Theoretical diagrams, figures, and proofs
-├── CLAUDE.md           # AI developer instructions
-└── README.md           # Trilingual guide (Uzbek, Russian, English)
-```
+### 📊 2. Natija (Result)
+1. **Python RSI Real-Time Server Dvigateli (`rsi_socket_server.py`):**
+   - KRC dan keluvchi XML paketlarini tezkor parslash (`RIst`, `AIPos`, `IPOC`).
+   - IPOC uzluksizligini tekshirish va yo'qolgan paketlar (packet drops) hisobi.
+   - Deterministik $4\text{ ms}$ javob paketi generatori (`<Sen Type="ImFree"><RKorr .../>`).
+2. **Pytest Unit Testlari (`test_rsi.py`):**
+   - XML o'qilishi aniqligi, IPOC xatoliklari hisobi va javob paketi strukturasining 100% to'g'riligi (3/3 test o'tdi).
 
 ---
 
-### 🧮 Mathematical Foundations & Verification
-All formulas, derivations, and theorems for this lesson are detailed in [**docs/derivations.md**](./docs/derivations.md).
-Runnable Python verification scripts are provided in `src/scripts/verify_theorem.py`.
+### 🧮 3. Matematik apparat (Mathematics)
 
-To run the verification test:
+$$t_{reply} \le t_{request} + T_{cycle} - \delta_{guard}, \quad \Delta \text{IPOC} = \text{IPOC}_k - \text{IPOC}_{k-1} = 1$$
+$$|\Delta p_{xyz}| \le v_{safe} \cdot T_{cycle}$$
+
+RSI xavfsizlik chegaralari va spetsifikatsiyalari [**docs/derivations.md**](./docs/derivations.md) da keltirilgan.
+
+---
+
+### 💻 4. Ishga tushirish va tekshirish (Execution & Verification)
+
+Python RSI dvigatelini sinash:
 ```bash
-uv run --with numpy python src/scripts/verify_theorem.py
+uv run --with numpy python src/scripts/rsi_socket_server.py
 ```
 
+Konsol chiqishi:
+```
+=================================================================
+Lesson 20: KUKA RSI (RobotSensorInterface) Real-Time XML Protocol
+=================================================================
+
+Received Robot State:
+  IPOC:          10001
+  TCP Cartesian: [480.0, 0.0, 435.0, 0.0, 90.0, 0.0]
+  Joint Angles:  [0.0, -90.0, 90.0, 0.0, 0.0, 0.0]
+
+Sent XML Reply to KRC:
+  <Sen Type="ImFree"><RKorr X="0.0000" Y="0.0000" Z="0.2000" A="0.0000" B="0.0000" C="0.0000"/><IPOC>10001</IPOC></Sen>
+```
+
+Unit testlarni bajarish:
+```bash
+uv run --with numpy --with pytest pytest src/scripts/test_rsi.py
+```
+Natija: `3 passed in 0.12s`.
+
 ---
-🔗 **[Return to Master Syllabus / Bosh Mundarija](https://github.com/muzaffarbekmustafayev/kuka-industrial-robotics-syllabus)**
+
+🔗 **[Bosh Mundarija / Return to Master Syllabus](https://github.com/muzaffarbekmustafayev/kuka-industrial-robotics-syllabus)**
